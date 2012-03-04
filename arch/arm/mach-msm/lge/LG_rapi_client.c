@@ -58,6 +58,8 @@
 static uint32_t open_count;
 struct msm_rpc_client *client;
 
+static int old_cable_type = -1;
+
 int LG_rapi_init(void)
 {
 	client = oem_rapi_client_init();
@@ -82,14 +84,12 @@ int msm_chg_LG_cable_type(void)
 	struct oem_rapi_client_streaming_func_arg arg;
 	struct oem_rapi_client_streaming_func_ret ret;
 	char output[LG_RAPI_CLIENT_MAX_OUT_BUFF_SIZE];
-
-	Open_check();
-
-/* LGE_CHANGES_S [younsuk.song@lge.com] 2010-09-06, Add error control code. Repeat 3 times if error occurs*/
-	
+	int retValue = 0;
 	int rc= -1;
 	int errCount= 0;
 
+	Open_check();
+	
 	do 
 	{
 		arg.event = LG_FW_RAPI_CLIENT_EVENT_GET_LINE_TYPE;
@@ -105,19 +105,33 @@ int msm_chg_LG_cable_type(void)
 		ret.out_len = NULL;
 
 		rc= oem_rapi_client_streaming_function(client, &arg, &ret);
-	
+		if (rc < 0) {
+			retValue = old_cable_type;
+		} 
+		else {
+			memcpy(output, ret.output, *ret.out_len);
+			retValue = GET_INT32(output);
+
+			if (retValue == 0) // no init cable 
+				retValue = old_cable_type;
+			else //read ok.
+				old_cable_type = retValue;
+		}
+
+/*		if (ret.output)
+			kfree(ret.output);
+		if (ret.out_len)
+			kfree(ret.out_len);*/
 	} while (rc < 0 && errCount++ < 3);
 
-/* LGE_CHANGES_E [younsuk.song@lge.com] */
-	
-	memcpy(output,ret.output,*ret.out_len);
-
-	kfree(ret.output);
-	kfree(ret.out_len);
-
-	return (GET_INT32(output));  
+/*#ifdef CONFIG_MACH_MSM7X27_THUNDERC_SPRINT
+	if (lge_bd_rev < HW_PCB_REV_B && retValue == 10) // LT_130K
+		retValue = 0;
+#endif
+*/
+	printk("USB Cable type: %s(): %d\n", __func__, retValue);
+	return retValue;
 }
-
 
 void send_to_arm9(void*	pReq, void* pRsp)
 {
@@ -279,8 +293,8 @@ void msm_get_MEID_type(char* sMeid)
 
 	memcpy(sMeid,ret.output,14); 
 
-	kfree(ret.output);
+/*	kfree(ret.output);
 	kfree(ret.out_len);
-
+*/
 	return;  
 }

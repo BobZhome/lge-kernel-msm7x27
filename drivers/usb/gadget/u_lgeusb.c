@@ -32,7 +32,6 @@
 /* #define LGEUSB_DYNAMIC_DEBUG */
 
 #include "u_lgeusb.h"
-
 /* LGE_CHANGE
  * To check factory mode in user space.
  * 2011-02-10, hyunhui.park@lge.com
@@ -40,27 +39,74 @@
 static struct mutex lock;
 
 static int lgeusb_get_mode(char *buffer, struct kernel_param *kp);
+
+/* LGE_CHANGES_S [khlee@lge.com] 2010-01-04, [VS740] usb switch */
+/* to supports FS USB in the Factory ( LT cable will be connected) */
+#define LG_FACTORY_CABLE_TYPE 		3
+#define LG_FACTORY_CABLE_130K_TYPE 	10
+#define LT_ADB_CABLE 			0xff
+
 /* Read only */
 module_param_call(mode, NULL, lgeusb_get_mode, NULL, S_IRUGO);
 MODULE_PARM_DESC(mode, "LGE USB Specific mode");
 
-#ifdef CONFIG_USB_SUPPORT_LGE_ANDROID_AUTORUN
-/* LGE_CHANGE
- * To set/get USB user mode to/from user space.
- * 2011-03-09, hyunhui.park@lge.com
- */
-static u16 user_mode;
-static int lgeusb_set_usermode(const char *val, struct kernel_param *kp);
-static int lgeusb_get_usermode(char *buffer, struct kernel_param *kp);
-module_param_call(user_mode, lgeusb_set_usermode, lgeusb_get_usermode,
-					&user_mode, 0664);
-MODULE_PARM_DESC(user_mode, "USB Autorun user mode");
-#endif
-
 static struct lgeusb_info *usb_info;
-
 /* FIXME: This length must be same as MAX_STR_LEN in android.c */
 #define MAX_SERIAL_NO_LEN 20
+
+/* -------- CDMA Class Utils -------- */
+#define LGE_PIF_CABLE 2
+
+#ifdef CONFIG_USB_SUPPORT_LGE_GADGET_CDMA
+
+extern int msm_chg_LG_cable_type(void);
+extern void msm_get_MEID_type(char* sMeid);
+
+static int get_serial_number(char *serial_number)
+{
+/* LGE_CHANGES_S [younsuk.song@lge.com] 2010-06-21, Set MEID */
+	memset(serial_number, 0, MAX_SERIAL_NO_LEN);
+
+	msm_get_MEID_type(serial_number);
+
+	if(!strcmp(serial_number,"00000000000000")) 
+		serial_number[0] = '\0';
+
+	if(msm_chg_LG_cable_type() == LT_ADB_CABLE)
+	{
+		sprintf(serial_number,"%s","LGE_ANDROID_DE");
+	}
+
+  /* if LT cable, set serial_number to NULL */
+	if (lgeusb_detect_factory_cable()) {
+		serial_number[0] = '\0';
+	}
+	return 0;
+/* LGE_CHANGES_E [younsuk.song@lge.com] 2010-06-21 */
+}
+
+/*
+ * CDMA class model must detect 2 types of factory cable
+ * 1. LT CABLE - must be FullSpeed setting
+ * 2. 130K CABLE - must be HighSpeed setting
+ *
+ * In case of normal USB cable, we return 0.
+ */
+static int get_factory_cable(void)
+{
+/*LGSI_CHANGE_S <pranav.s@lge.com> PIF cable detection change*/
+ int cable_type =  msm_chg_LG_cable_type();
+
+	/* LGE_CHANGES_S [moses.son@lge.com] 2011-02-09, need to check LT cable type */
+	if( cable_type == LG_FACTORY_CABLE_TYPE ||
+	    cable_type == LG_FACTORY_CABLE_130K_TYPE)  //detect LT cable
+		return 1;
+	else
+		return 0;
+/*LGSI_CHANGE_E <pranav.s@lge.com> PIF cable detection change*/
+}
+
+#endif /* CONFIG_USB_SUPPORT_LGE_GADGET_CDMA */
 
 #ifdef CONFIG_USB_SUPPORT_LGE_GADGET_GSM
 static int get_serial_number(char *serial_number)
@@ -123,43 +169,6 @@ static int lgeusb_get_mode(char *buffer, struct kernel_param *kp)
 	return ret;
 }
 
-#ifdef CONFIG_USB_SUPPORT_LGE_ANDROID_AUTORUN
-/* LGE_CHANGE
- * To set/get USB user mode to/from user space for autorun.
- * 2011-03-09, hyunhui.park@lge.com
- */
-static int lgeusb_set_usermode(const char *val, struct kernel_param *kp)
-{
-	int ret = 0;
-	unsigned long tmp;
-
-	ret = strict_strtoul(val, 16, &tmp);
-	if (ret)
-		return ret;
-
-	user_mode = (unsigned int)tmp;
-	pr_info("autorun user mode : %d\n", user_mode);
-
-	return ret;
-}
-
-static int lgeusb_get_usermode(char *buffer, struct kernel_param *kp)
-{
-	int ret;
-
-	mutex_lock(&lock);
-	ret = sprintf(buffer, "%d", user_mode);
-	mutex_unlock(&lock);
-
-	return ret;
-}
-
-int lgeusb_get_usb_usermode(void)
-{
-	return user_mode;
-}
-#endif
-
 static void do_switch_mode(int pid, int need_reset)
 {
 	struct lgeusb_info *info = usb_info;
@@ -215,7 +224,7 @@ int lgeusb_get_current_mode(void)
 {
 	struct lgeusb_info *info = usb_info;
 
-	return (int)info->current_mode;
+	return info->current_mode;
 }
 
 /* LGE_CHANGE
