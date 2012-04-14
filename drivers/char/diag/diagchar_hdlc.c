@@ -376,14 +376,14 @@ int lg_diag_write_overflow(void *pStart, void *pDone, void *pEnd)
   	(uint32_t)pDone-(uint32_t)pStart, (uint32_t)pEnd-(uint32_t)pDone+1);
 
   driver->used = (uint32_t)pDone - (uint32_t)pStart; // last two byte are not encoded
-  driver->usb_write_ptr_svc = (struct diag_request *)
-  	(diagmem_alloc(driver, sizeof(struct diag_request),
-  	POOL_TYPE_USB_STRUCT));
+//  driver->usb_write_ptr_svc = (struct diag_request *)
+//  	(diagmem_alloc(driver, sizeof(struct diag_request),
+//  	POOL_TYPE_USB_STRUCT));
     
-  driver->usb_write_ptr_svc->buf = pStart;
-  driver->usb_write_ptr_svc->length = driver->used;
+//  driver->usb_write_ptr_svc->buf = pStart;
+//  driver->usb_write_ptr_svc->length = driver->used;
 
-  err = diag_write(driver->usb_write_ptr_svc);
+//  err = diag_write(driver->usb_write_ptr_svc);
   if (err) {
       printk(KERN_ERR "LG_FW : lg_diag_write_overflow, diag_write error (%d)\n", err);
       /*Free the buffer right away if write failed */

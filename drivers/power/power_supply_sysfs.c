@@ -204,7 +204,7 @@ static ssize_t pseudo_batt_store_property(struct device *dev,
 			goto out;
 		}
 	}
-	pseudo_batt_set(&info);
+//	pseudo_batt_set(&info);
 	ret = count;
 out:
 	return ret;
@@ -229,7 +229,7 @@ static ssize_t block_charging_store_property(struct device *dev,
 		goto out;
 	}
 	printk("%s:block charging=%d\n",__func__,block);
-	batt_block_charging_set(block);
+//	batt_block_charging_set(block);
 	ret = count;
 out:
 	return ret;

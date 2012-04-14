@@ -30,7 +30,7 @@
  * Support MTC using diag port 
  * 2010-07-11 taehung.kim@lge.com
  */
-#if defined (CONFIG_MACH_MSM7X27_THUNDERC) || defined (LG_FW_MTC)
+#if defined (CONFIG_MACH_MSM7X27_THUNDERA) || defined (LG_FW_MTC)
 extern unsigned char g_diag_mtc_check;
 #endif
 
@@ -361,7 +361,7 @@ uint32_t at_cmd,at_act;
 			 * Support MTC using diag port 
 			 * 2010-07-11 taehung.kim@lge.com
 			 */
-#if defined (CONFIG_MACH_MSM7X27_THUNDERC) || defined (LG_FW_MTC)
+#if defined (CONFIG_MACH_MSM7X27_THUNDERA) || defined (LG_FW_MTC)
 			g_diag_mtc_check = 0;
 #endif
 			if(at_act != ATCMD_ACTION)

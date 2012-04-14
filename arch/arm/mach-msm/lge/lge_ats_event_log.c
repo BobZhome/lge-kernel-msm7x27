@@ -41,7 +41,7 @@ extern void ats_mtc_send_key_log_to_eta(struct ats_mtc_key_log_type *);
  * support MTC using diag port
  * 2010-07-11 taehung.kim@lge.com
  */
-#if defined (CONFIG_MACH_MSM7X27_THUNDERC) || defined(LG_FW_MTC)
+#if defined (CONFIG_MACH_MSM7X27_THUNDERA) || defined(LG_FW_MTC)
 extern unsigned char g_diag_mtc_check;
 extern void mtc_send_key_log_data(struct ats_mtc_key_log_type* p_ats_mtc_key_log);
 #endif
@@ -151,20 +151,20 @@ static const struct input_device_id ats_event_log_ids[] = {
 };
 
 
-static void event_log_work_func(struct work_struct *work)
-{
+//static void event_log_work_func(struct work_struct *work)
+//{
 /* LGE_CHANGE
  * support MTC using diag port
  * 2010-07-11 taehung.kim@lge.com
  */
-#if defined (CONFIG_MACH_MSM7X27_THUNDERC) || defined(LG_FW_MTC)
+/*#if defined (CONFIG_MACH_MSM7X27_THUNDERC) || defined(LG_FW_MTC)
 	if(g_diag_mtc_check==1)
 		mtc_send_key_log_data(&ats_mtc_key_log1);
 	else
 #endif
 		ats_mtc_send_key_log_to_eta(&ats_mtc_key_log1);
 }
-
+*/
 static void ats_event_log_event(struct input_handle *handle, unsigned int type,unsigned int code, int value)
 {
 	if ( (type == EV_KEY) && (0x00000001 & ats_mtc_log_mask) ){
@@ -228,7 +228,7 @@ int event_log_start(void)
 	if (ret != 0)
 		printk("%s:fail to registers input handler\n", __func__);
 
-	INIT_WORK(&event_log_work,event_log_work_func);
+//	INIT_WORK(&event_log_work,event_log_work_func);
 
 	return 0;
 }

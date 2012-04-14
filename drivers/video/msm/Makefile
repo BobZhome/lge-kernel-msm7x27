@@ -104,13 +104,19 @@ obj-$(CONFIG_FB_MSM_MDDI_SHARP_QVGA_128x128) += mddi_sharp.o
 obj-$(CONFIG_FB_MSM_MDDI_ORISE) += mddi_orise.o
 obj-$(CONFIG_FB_MSM_MDDI_QUICKVX) += mddi_quickvx.o
 obj-$(CONFIG_FB_MSM_MDDI_HITACHI_HVGA) += mddi_hitachi_hvga.o
+obj-$(CONFIG_FB_MSM_MDDI_NOVATEK_HVGA) += mddi_novatek_hvga.o
+endif
+
+ifeq ($(CONFIG_FB_MSM_MDDI_NOVATEK_HITACHI_HVGA),y)
+obj-y += mddi_hitachi_hvga.o
+obj-y += mddi_novatek_hvga.o
+endif
 
 # LGE_DEV_PORTING UNIVA_S [ks82.jung@lge.com]
 obj-$(CONFIG_FB_MSM_MDDI_LDP_HVGA) += mddi_ldp_hvga.o
 # LGE_DEV_PORTING UNIVA_E [ks82.jung@lge.com]
 
 obj-$(CONFIG_FB_MSM_MDDI_NOVATEK_HVGA) += mddi_novatek_hvga.o
-endif
 
 ifeq ($(CONFIG_FB_MSM_MIPI_PANEL_DETECT),y)
 obj-y += mipi_toshiba_video_wvga_pt.o mipi_novatek_video_qhd_pt.o
